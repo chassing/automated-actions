@@ -6,44 +6,21 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.noop_param import NoopParam
 from ...models.task_schema_out import TaskSchemaOut
-from ...types import UNSET, Response, Unset
+from ...types import Response
 
 
 def _get_kwargs(
-    *,
-    body: NoopParam,
-    labels: None | Unset | list[str] = UNSET,
+    cluster: str,
+    namespace: str,
+    kind: str,
+    name: str,
 ) -> dict[str, Any]:
-    headers: dict[str, Any] = {}
-
-    params: dict[str, Any] = {}
-
-    json_labels: None | Unset | list[str]
-    if isinstance(labels, Unset):
-        json_labels = UNSET
-    elif isinstance(labels, list):
-        json_labels = labels
-
-    else:
-        json_labels = labels
-    params["labels"] = json_labels
-
-    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
-
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/api/v1/noop",
-        "params": params,
+        "url": f"/api/v1/openshift/workload-restart/{cluster}/{namespace}/{kind}/{name}",
     }
 
-    _body = body.to_dict()
-
-    _kwargs["json"] = _body
-    headers["Content-Type"] = "application/json"
-
-    _kwargs["headers"] = headers
     return _kwargs
 
 
@@ -76,18 +53,22 @@ def _build_response(
 
 
 def sync_detailed(
+    cluster: str,
+    namespace: str,
+    kind: str,
+    name: str,
     *,
     client: AuthenticatedClient | Client,
-    body: NoopParam,
-    labels: None | Unset | list[str] = UNSET,
 ) -> Response[HTTPValidationError | TaskSchemaOut]:
-    """Run Noop
+    """Openshift Workload Restart
 
-     Run a noop action
+     Restart an OpenShift workload.
 
     Args:
-        labels (Union[None, Unset, list[str]]):
-        body (NoopParam):
+        cluster (str): OpenShift cluster name
+        namespace (str): OpenShift namespace
+        kind (str): OpenShift workload kind. e.g. Deployment or Pod
+        name (str): OpenShift workload name
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -98,8 +79,10 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        body=body,
-        labels=labels,
+        cluster=cluster,
+        namespace=namespace,
+        kind=kind,
+        name=name,
     )
 
     with client as _client:
@@ -111,18 +94,22 @@ def sync_detailed(
 
 
 def sync(
+    cluster: str,
+    namespace: str,
+    kind: str,
+    name: str,
     *,
     client: AuthenticatedClient | Client,
-    body: NoopParam,
-    labels: None | Unset | list[str] = UNSET,
 ) -> HTTPValidationError | TaskSchemaOut | None:
-    """Run Noop
+    """Openshift Workload Restart
 
-     Run a noop action
+     Restart an OpenShift workload.
 
     Args:
-        labels (Union[None, Unset, list[str]]):
-        body (NoopParam):
+        cluster (str): OpenShift cluster name
+        namespace (str): OpenShift namespace
+        kind (str): OpenShift workload kind. e.g. Deployment or Pod
+        name (str): OpenShift workload name
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -133,25 +120,31 @@ def sync(
     """
 
     return sync_detailed(
+        cluster=cluster,
+        namespace=namespace,
+        kind=kind,
+        name=name,
         client=client,
-        body=body,
-        labels=labels,
     ).parsed
 
 
 async def asyncio_detailed(
+    cluster: str,
+    namespace: str,
+    kind: str,
+    name: str,
     *,
     client: AuthenticatedClient | Client,
-    body: NoopParam,
-    labels: None | Unset | list[str] = UNSET,
 ) -> Response[HTTPValidationError | TaskSchemaOut]:
-    """Run Noop
+    """Openshift Workload Restart
 
-     Run a noop action
+     Restart an OpenShift workload.
 
     Args:
-        labels (Union[None, Unset, list[str]]):
-        body (NoopParam):
+        cluster (str): OpenShift cluster name
+        namespace (str): OpenShift namespace
+        kind (str): OpenShift workload kind. e.g. Deployment or Pod
+        name (str): OpenShift workload name
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -162,8 +155,10 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        body=body,
-        labels=labels,
+        cluster=cluster,
+        namespace=namespace,
+        kind=kind,
+        name=name,
     )
 
     async with client as _client:
@@ -175,18 +170,22 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    cluster: str,
+    namespace: str,
+    kind: str,
+    name: str,
     *,
     client: AuthenticatedClient | Client,
-    body: NoopParam,
-    labels: None | Unset | list[str] = UNSET,
 ) -> HTTPValidationError | TaskSchemaOut | None:
-    """Run Noop
+    """Openshift Workload Restart
 
-     Run a noop action
+     Restart an OpenShift workload.
 
     Args:
-        labels (Union[None, Unset, list[str]]):
-        body (NoopParam):
+        cluster (str): OpenShift cluster name
+        namespace (str): OpenShift namespace
+        kind (str): OpenShift workload kind. e.g. Deployment or Pod
+        name (str): OpenShift workload name
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -198,9 +197,11 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
+            cluster=cluster,
+            namespace=namespace,
+            kind=kind,
+            name=name,
             client=client,
-            body=body,
-            labels=labels,
         )
     ).parsed
 
@@ -212,19 +213,30 @@ import typer
 app = typer.Typer()
 
 
-@app.command(help="Run a noop action")
-def noop(
+@app.command(help="Restart an OpenShift workload.")
+def openshift_workload_restart(
     ctx: typer.Context,
-    alias: Annotated[str, typer.Option(help="")],
-    description: Annotated[str, typer.Option(help="")] = "no description",
-    labels: Annotated[None | list[str], typer.Option(help="")] = None,
+    cluster: Annotated[
+        str, typer.Option(help="OpenShift cluster name", show_default=False)
+    ],
+    namespace: Annotated[
+        str, typer.Option(help="OpenShift namespace", show_default=False)
+    ],
+    kind: Annotated[
+        str,
+        typer.Option(
+            help="OpenShift workload kind. e.g. Deployment or Pod", show_default=False
+        ),
+    ],
+    name: Annotated[
+        str, typer.Option(help="OpenShift workload name", show_default=False)
+    ],
 ) -> None:
     result = sync(
-        labels=labels,
-        body=NoopParam(
-            alias=alias,
-            description=description,
-        ),
+        cluster=cluster,
+        namespace=namespace,
+        kind=kind,
+        name=name,
         client=ctx.obj["client"],
     )
     if "console" in ctx.obj:

@@ -6,54 +6,49 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.noop_param import NoopParam
 from ...models.task_schema_out import TaskSchemaOut
+from ...models.task_status import TaskStatus
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: NoopParam,
-    labels: None | Unset | list[str] = UNSET,
+    status: None | TaskStatus | Unset = TaskStatus.RUNNING,
 ) -> dict[str, Any]:
-    headers: dict[str, Any] = {}
-
     params: dict[str, Any] = {}
 
-    json_labels: None | Unset | list[str]
-    if isinstance(labels, Unset):
-        json_labels = UNSET
-    elif isinstance(labels, list):
-        json_labels = labels
-
+    json_status: None | Unset | str
+    if isinstance(status, Unset):
+        json_status = UNSET
+    elif isinstance(status, TaskStatus):
+        json_status = status.value
     else:
-        json_labels = labels
-    params["labels"] = json_labels
+        json_status = status
+    params["status"] = json_status
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     _kwargs: dict[str, Any] = {
-        "method": "post",
-        "url": "/api/v1/noop",
+        "method": "get",
+        "url": "/api/v1/tasks",
         "params": params,
     }
 
-    _body = body.to_dict()
-
-    _kwargs["json"] = _body
-    headers["Content-Type"] = "application/json"
-
-    _kwargs["headers"] = headers
     return _kwargs
 
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | TaskSchemaOut | None:
-    if response.status_code == 202:
-        response_202 = TaskSchemaOut.from_dict(response.json())
+) -> HTTPValidationError | list["TaskSchemaOut"] | None:
+    if response.status_code == 200:
+        response_200 = []
+        _response_200 = response.json()
+        for response_200_item_data in _response_200:
+            response_200_item = TaskSchemaOut.from_dict(response_200_item_data)
 
-        return response_202
+            response_200.append(response_200_item)
+
+        return response_200
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
 
@@ -66,7 +61,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | TaskSchemaOut]:
+) -> Response[HTTPValidationError | list["TaskSchemaOut"]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -78,28 +73,25 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: NoopParam,
-    labels: None | Unset | list[str] = UNSET,
-) -> Response[HTTPValidationError | TaskSchemaOut]:
-    """Run Noop
+    status: None | TaskStatus | Unset = TaskStatus.RUNNING,
+) -> Response[HTTPValidationError | list["TaskSchemaOut"]]:
+    """Task List
 
-     Run a noop action
+     List all user tasks.
 
     Args:
-        labels (Union[None, Unset, list[str]]):
-        body (NoopParam):
+        status (Union[None, TaskStatus, Unset]):  Default: TaskStatus.RUNNING.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, TaskSchemaOut]]
+        Response[Union[HTTPValidationError, list['TaskSchemaOut']]]
     """
 
     kwargs = _get_kwargs(
-        body=body,
-        labels=labels,
+        status=status,
     )
 
     with client as _client:
@@ -113,57 +105,51 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    body: NoopParam,
-    labels: None | Unset | list[str] = UNSET,
-) -> HTTPValidationError | TaskSchemaOut | None:
-    """Run Noop
+    status: None | TaskStatus | Unset = TaskStatus.RUNNING,
+) -> HTTPValidationError | list["TaskSchemaOut"] | None:
+    """Task List
 
-     Run a noop action
+     List all user tasks.
 
     Args:
-        labels (Union[None, Unset, list[str]]):
-        body (NoopParam):
+        status (Union[None, TaskStatus, Unset]):  Default: TaskStatus.RUNNING.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, TaskSchemaOut]
+        Union[HTTPValidationError, list['TaskSchemaOut']]
     """
 
     return sync_detailed(
         client=client,
-        body=body,
-        labels=labels,
+        status=status,
     ).parsed
 
 
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: NoopParam,
-    labels: None | Unset | list[str] = UNSET,
-) -> Response[HTTPValidationError | TaskSchemaOut]:
-    """Run Noop
+    status: None | TaskStatus | Unset = TaskStatus.RUNNING,
+) -> Response[HTTPValidationError | list["TaskSchemaOut"]]:
+    """Task List
 
-     Run a noop action
+     List all user tasks.
 
     Args:
-        labels (Union[None, Unset, list[str]]):
-        body (NoopParam):
+        status (Union[None, TaskStatus, Unset]):  Default: TaskStatus.RUNNING.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, TaskSchemaOut]]
+        Response[Union[HTTPValidationError, list['TaskSchemaOut']]]
     """
 
     kwargs = _get_kwargs(
-        body=body,
-        labels=labels,
+        status=status,
     )
 
     async with client as _client:
@@ -177,30 +163,27 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    body: NoopParam,
-    labels: None | Unset | list[str] = UNSET,
-) -> HTTPValidationError | TaskSchemaOut | None:
-    """Run Noop
+    status: None | TaskStatus | Unset = TaskStatus.RUNNING,
+) -> HTTPValidationError | list["TaskSchemaOut"] | None:
+    """Task List
 
-     Run a noop action
+     List all user tasks.
 
     Args:
-        labels (Union[None, Unset, list[str]]):
-        body (NoopParam):
+        status (Union[None, TaskStatus, Unset]):  Default: TaskStatus.RUNNING.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, TaskSchemaOut]
+        Union[HTTPValidationError, list['TaskSchemaOut']]
     """
 
     return (
         await asyncio_detailed(
             client=client,
-            body=body,
-            labels=labels,
+            status=status,
         )
     ).parsed
 
@@ -212,20 +195,11 @@ import typer
 app = typer.Typer()
 
 
-@app.command(help="Run a noop action")
-def noop(
+@app.command(help="List all user tasks.")
+def task_list(
     ctx: typer.Context,
-    alias: Annotated[str, typer.Option(help="")],
-    description: Annotated[str, typer.Option(help="")] = "no description",
-    labels: Annotated[None | list[str], typer.Option(help="")] = None,
+    status: Annotated[None | TaskStatus, typer.Option(help="")] = TaskStatus.RUNNING,
 ) -> None:
-    result = sync(
-        labels=labels,
-        body=NoopParam(
-            alias=alias,
-            description=description,
-        ),
-        client=ctx.obj["client"],
-    )
+    result = sync(status=status, client=ctx.obj["client"])
     if "console" in ctx.obj:
         ctx.obj["console"].print(result)

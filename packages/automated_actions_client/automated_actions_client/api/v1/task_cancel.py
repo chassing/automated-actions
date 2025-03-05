@@ -6,44 +6,18 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.noop_param import NoopParam
 from ...models.task_schema_out import TaskSchemaOut
-from ...types import UNSET, Response, Unset
+from ...types import Response
 
 
 def _get_kwargs(
-    *,
-    body: NoopParam,
-    labels: None | Unset | list[str] = UNSET,
+    task_id: str,
 ) -> dict[str, Any]:
-    headers: dict[str, Any] = {}
-
-    params: dict[str, Any] = {}
-
-    json_labels: None | Unset | list[str]
-    if isinstance(labels, Unset):
-        json_labels = UNSET
-    elif isinstance(labels, list):
-        json_labels = labels
-
-    else:
-        json_labels = labels
-    params["labels"] = json_labels
-
-    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
-
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/api/v1/noop",
-        "params": params,
+        "url": f"/api/v1/tasks/{task_id}",
     }
 
-    _body = body.to_dict()
-
-    _kwargs["json"] = _body
-    headers["Content-Type"] = "application/json"
-
-    _kwargs["headers"] = headers
     return _kwargs
 
 
@@ -76,18 +50,16 @@ def _build_response(
 
 
 def sync_detailed(
+    task_id: str,
     *,
     client: AuthenticatedClient | Client,
-    body: NoopParam,
-    labels: None | Unset | list[str] = UNSET,
 ) -> Response[HTTPValidationError | TaskSchemaOut]:
-    """Run Noop
+    """Task Cancel
 
-     Run a noop action
+     Cancel an action.
 
     Args:
-        labels (Union[None, Unset, list[str]]):
-        body (NoopParam):
+        task_id (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -98,8 +70,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        body=body,
-        labels=labels,
+        task_id=task_id,
     )
 
     with client as _client:
@@ -111,18 +82,16 @@ def sync_detailed(
 
 
 def sync(
+    task_id: str,
     *,
     client: AuthenticatedClient | Client,
-    body: NoopParam,
-    labels: None | Unset | list[str] = UNSET,
 ) -> HTTPValidationError | TaskSchemaOut | None:
-    """Run Noop
+    """Task Cancel
 
-     Run a noop action
+     Cancel an action.
 
     Args:
-        labels (Union[None, Unset, list[str]]):
-        body (NoopParam):
+        task_id (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -133,25 +102,22 @@ def sync(
     """
 
     return sync_detailed(
+        task_id=task_id,
         client=client,
-        body=body,
-        labels=labels,
     ).parsed
 
 
 async def asyncio_detailed(
+    task_id: str,
     *,
     client: AuthenticatedClient | Client,
-    body: NoopParam,
-    labels: None | Unset | list[str] = UNSET,
 ) -> Response[HTTPValidationError | TaskSchemaOut]:
-    """Run Noop
+    """Task Cancel
 
-     Run a noop action
+     Cancel an action.
 
     Args:
-        labels (Union[None, Unset, list[str]]):
-        body (NoopParam):
+        task_id (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -162,8 +128,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        body=body,
-        labels=labels,
+        task_id=task_id,
     )
 
     async with client as _client:
@@ -175,18 +140,16 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    task_id: str,
     *,
     client: AuthenticatedClient | Client,
-    body: NoopParam,
-    labels: None | Unset | list[str] = UNSET,
 ) -> HTTPValidationError | TaskSchemaOut | None:
-    """Run Noop
+    """Task Cancel
 
-     Run a noop action
+     Cancel an action.
 
     Args:
-        labels (Union[None, Unset, list[str]]):
-        body (NoopParam):
+        task_id (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -198,9 +161,8 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
+            task_id=task_id,
             client=client,
-            body=body,
-            labels=labels,
         )
     ).parsed
 
@@ -212,20 +174,11 @@ import typer
 app = typer.Typer()
 
 
-@app.command(help="Run a noop action")
-def noop(
+@app.command(help="Cancel an action.")
+def task_cancel(
     ctx: typer.Context,
-    alias: Annotated[str, typer.Option(help="")],
-    description: Annotated[str, typer.Option(help="")] = "no description",
-    labels: Annotated[None | list[str], typer.Option(help="")] = None,
+    task_id: Annotated[str, typer.Option(help="", show_default=False)],
 ) -> None:
-    result = sync(
-        labels=labels,
-        body=NoopParam(
-            alias=alias,
-            description=description,
-        ),
-        client=ctx.obj["client"],
-    )
+    result = sync(task_id=task_id, client=ctx.obj["client"])
     if "console" in ctx.obj:
         ctx.obj["console"].print(result)
