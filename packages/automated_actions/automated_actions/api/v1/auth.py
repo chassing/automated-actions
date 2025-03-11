@@ -29,7 +29,7 @@ g = _, _
 e = some(where (p.eft == allow))
 
 [matchers]
-m = (p.sub == "*" || g(r.sub, p.sub)) && (r.obj == p.obj) && (p.params == "*" || r.params == p.params)
+m = (p.sub == "*" || g(r.sub, p.sub)) && (r.obj == p.obj) && (r.params == p.params)
 """
 
 # TODO @cassing: Discuss with Rafa what the default policy should be.
