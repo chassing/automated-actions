@@ -86,6 +86,7 @@ ignore = [
     "D213",    # multi-line-summary-second-line
     "D4",      # Doc string style
     "E501",    # Line too long
+    "FIX002",  # TODO comment found
     "G004",    # Logging statement uses f-string
     "PLR0904", # Too many public methods
     "PLR0913", # Too many arguments

@@ -29,8 +29,19 @@ g = _, _
 e = some(where (p.eft == allow))
 
 [matchers]
-m = (p.sub == "*" || g(r.sub, p.sub)) && (r.obj == p.obj) && (p.params == "*" || r.params == p.params)
+m = (p.sub == "*" || g(r.sub, p.sub)) && (r.obj == p.obj) && (r.params == p.params)
 """
+
+# TODO @cassing: Discuss with Rafa what the default policy should be.
+# APPSRE-11601
+DEFAULT_POLICY = {
+    "p": [
+        {"sub": "*", "obj": "me", "params": {}},
+        {"sub": "*", "obj": "task-list", "params": {}},
+        {"sub": "*", "obj": "task-detail", "params": {}},
+        {"sub": "*", "obj": "task-cancel", "params": {}},
+    ]
+}
 
 
 class CasbinAuthZ:
@@ -85,6 +96,7 @@ class YamlAdapter(Adapter):
 
     def load_policy(self, model: Model) -> None:
         policy = yaml.safe_load(Path(self._file_path).read_text(encoding="utf-8"))
+        policy["p"] += DEFAULT_POLICY["p"]
 
         model.add_policies("g", "g", self._get_role_rules(policy))
 
