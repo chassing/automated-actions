@@ -48,6 +48,8 @@ def sync_detailed(
 ) -> Response[UserSchemaOut]:
     """Me
 
+     Get the current user information.
+
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -72,6 +74,8 @@ def sync(
 ) -> UserSchemaOut | None:
     """Me
 
+     Get the current user information.
+
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -90,6 +94,8 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
 ) -> Response[UserSchemaOut]:
     """Me
+
+     Get the current user information.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -115,6 +121,8 @@ async def asyncio(
 ) -> UserSchemaOut | None:
     """Me
 
+     Get the current user information.
+
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
@@ -135,7 +143,7 @@ import typer
 app = typer.Typer()
 
 
-@app.command(help="")
+@app.command(help="Get the current user information.")
 def me(
     ctx: typer.Context,
 ) -> None:

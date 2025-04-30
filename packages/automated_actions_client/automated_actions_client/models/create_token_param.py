@@ -1,55 +1,70 @@
+import datetime
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
+from dateutil.parser import isoparse
 
-from ..types import UNSET, Unset
-
-T = TypeVar("T", bound="NoopParam")
+T = TypeVar("T", bound="CreateTokenParam")
 
 
 @_attrs_define
-class NoopParam:
+class CreateTokenParam:
     """
     Attributes:
-        alias (str):
-        description (Union[Unset, str]):  Default: 'no description'.
+        name (str):
+        username (str):
+        email (str):
+        expiration (datetime.datetime):
     """
 
-    alias: str
-    description: Unset | str = "no description"
+    name: str
+    username: str
+    email: str
+    expiration: datetime.datetime
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        alias = self.alias
+        name = self.name
 
-        description = self.description
+        username = self.username
+
+        email = self.email
+
+        expiration = self.expiration.isoformat()
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({
-            "alias": alias,
+            "name": name,
+            "username": username,
+            "email": email,
+            "expiration": expiration,
         })
-        if description is not UNSET:
-            field_dict["description"] = description
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        alias = d.pop("alias")
+        name = d.pop("name")
 
-        description = d.pop("description", UNSET)
+        username = d.pop("username")
 
-        noop_param = cls(
-            alias=alias,
-            description=description,
+        email = d.pop("email")
+
+        expiration = isoparse(d.pop("expiration"))
+
+        create_token_param = cls(
+            name=name,
+            username=username,
+            email=email,
+            expiration=expiration,
         )
 
-        noop_param.additional_properties = d
-        return noop_param
+        create_token_param.additional_properties = d
+        return create_token_param
 
     @property
     def additional_keys(self) -> list[str]:
