@@ -1,3 +1,5 @@
+from fastapi_mcp import FastApiMCP
+
 from automated_actions.app_factory import create_app
 from automated_actions.config import settings
 
@@ -49,3 +51,6 @@ logging_config = {
 }
 
 app = create_app(logging_config=logging_config)
+mcp = FastApiMCP(app, include_operations=["action-list", "openshift-workload-restart"])
+app.state.mcp = mcp
+mcp.mount()

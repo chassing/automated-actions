@@ -75,6 +75,8 @@ def create_app(
             run_auth_init=run_auth_init,
             run_router_config=run_router_config,
         ):
+            if hasattr(app_instance.state, "mcp"):
+                app_instance.state.mcp.setup_server()
             yield
 
     if logging_config:
