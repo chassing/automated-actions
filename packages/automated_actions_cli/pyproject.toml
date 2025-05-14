@@ -12,8 +12,11 @@ requires-python = "~= 3.12.0"
 dependencies = [
     "appdirs==1.4.4",
     "automated-actions-client",
+    # https://github.com/fastapi/typer/pull/1145
+    "click<8.2.0",
     "httpx-gssapi==0.4",
     "pydantic-settings==2.9.1",
+    "pyyaml==6.0.2",
     "rich==14.0.0",
     "typer==0.15.3",
 ]
@@ -30,6 +33,7 @@ dev = [
     "mypy==1.15.0",
     "pytest==8.3.5",
     "pytest-cov==6.1.1",
+    "types-pyyaml==6.0.12.20250402",
 ]
 
 [project.scripts]
