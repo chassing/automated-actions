@@ -1,30 +1,29 @@
 package authz
 
-default allow := false
+default authorized := false
 
-users := data.users
-
-roles := data.roles
-
-allow if { # regal ignore:messy-rule
+# METADATA
+# description: Allow access to an action if the user has the required permissions
+# entrypoint: true
+# scope: document
+authorized if {
 	# Check if the user has specific roles
-	user_roles := users[input.username]
-	some role in user_roles
-	check_role_permissions(role)
+	user_roles := data.users[input.username]
+	some role_name in user_roles
+	check_role_permissions(data.roles[role_name], input.username, input.obj, input.params)
 }
 
-allow if {
+authorized if {
 	# Check if there are default roles for all users
-	default_roles := users["*"]
-	some role in default_roles
-	check_role_permissions(role)
+	default_roles := data.users["*"]
+	some role_name in default_roles
+	check_role_permissions(data.roles[role_name], input.username, input.obj, input.params)
 }
 
-check_role_permissions(role) if {
-	permissions := roles[role] # regal ignore:external-reference
-	some permission in permissions
-	object_matches(permission.obj, input.obj) # regal ignore:external-reference
-	valid_params(permission.params, input.params) # regal ignore:external-reference
+check_role_permissions(role_permissions, username, current_input_obj, current_input_params) if {
+	some permission in role_permissions
+	object_matches(permission.obj, current_input_obj)
+	valid_params(permission.params, current_input_params)
 }
 
 # Match any input if permission_obj is "*"

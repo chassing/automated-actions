@@ -1,0 +1,13 @@
+capabilities:
+  from:
+    engine: opa
+    version: v1.2.0
+
+rules:
+  testing:
+    print-or-trace-call:
+      level: ignore
+
+  style:
+    messy-rule:
+      level: ignore
