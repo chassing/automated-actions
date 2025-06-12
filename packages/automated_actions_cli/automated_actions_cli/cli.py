@@ -4,16 +4,19 @@ import importlib
 import logging
 import os
 import sys
+import textwrap
 from http.cookiejar import MozillaCookieJar
 from importlib.metadata import version
 from pathlib import Path
+from types import TracebackType
 from typing import Annotated, Any
 
 import httpx
 import typer
 from automated_actions_client import AuthenticatedClient, Client
-from automated_actions_client.api.v1.me import sync as api_v1_me
+from automated_actions_client.api.general.me import sync as api_v1_me
 from httpx_gssapi import OPTIONAL, HTTPSPNEGOAuth
+from packaging.version import parse as parse_version
 from rich import print as rich_print
 from rich.console import Console
 
@@ -21,10 +24,16 @@ from automated_actions_cli.config import config
 from automated_actions_cli.formatter import JsonFormatter, OutputFormat, YamlFormatter
 from automated_actions_cli.utils import (
     blend_text,
+    get_latest_pypi_version,
     kerberos_available,
     kinit,
     progress_spinner,
 )
+
+PACAKGE_NAME = "automated-actions-cli"
+LOCAL_VERSION = parse_version(version(PACAKGE_NAME))
+# Keep in sync with the tags used by automated-actions FastAPI endpoints.
+OPENAPI_TAGS = ["actions", "general", "admin"]
 
 app = typer.Typer(
     pretty_exceptions_show_locals=False,
@@ -47,9 +56,18 @@ BANNER = """
 """
 
 
+def no_traceback_exception_hook(
+    exc_type: type[BaseException],
+    exc_value: BaseException,
+    tb: TracebackType | None,  # noqa: ARG001
+) -> None:
+    """Custom exception hook to display exceptions without traceback."""
+    rich_print(f"{exc_type.__name__}: {exc_value}", file=sys.stderr)
+
+
 def version_callback(*, value: bool) -> None:
     if value:
-        rich_print(f"Version: {version('automated-actions-cli')}")
+        rich_print(f"Version: {LOCAL_VERSION}")
         raise typer.Exit
 
 
@@ -80,7 +98,7 @@ class ClientWithCookieJar(Client):
 
 
 @app.callback(no_args_is_help=True)
-def main(
+def main(  # noqa: C901, PLR0912
     ctx: typer.Context,
     *,
     url: Annotated[
@@ -119,6 +137,13 @@ def main(
 
     progress = None
     if not quiet and not screen_capture_file:
+        if get_latest_pypi_version(PACAKGE_NAME) > LOCAL_VERSION:
+            rich_print(
+                textwrap.dedent(f"""
+                    [red]You're running an outdated version of {PACAKGE_NAME}![/red]
+                    Please update to the latest version to benefit from new features and bug fixes.
+                """)
+            )
         progress = progress_spinner(console=console)
         progress.start()
         progress.add_task(description="Processing...", total=None)
@@ -129,6 +154,9 @@ def main(
         format="%(name)-20s: %(message)s",
     )
     logging.getLogger("httpx").setLevel(logging.WARNING)
+
+    if not debug:
+        sys.excepthook = no_traceback_exception_hook
 
     if token := os.environ.get("AA_TOKEN"):
         ctx.obj = {
@@ -188,11 +216,16 @@ def main(
 
 def initialize_client_actions() -> None:
     """Initialize typer commands from all available automated-actions-client actions."""
-    for action in dir(importlib.import_module("automated_actions_client.api.v1")):
-        if not action.startswith("_"):
-            app.add_typer(
-                importlib.import_module(f"automated_actions_client.api.v1.{action}").app
-            )
+    for module in OPENAPI_TAGS:
+        for action in dir(
+            importlib.import_module(f"automated_actions_client.api.{module}")
+        ):
+            if not action.startswith("_"):
+                app.add_typer(
+                    importlib.import_module(
+                        f"automated_actions_client.api.{module}.{action}"
+                    ).app
+                )
 
 
 initialize_client_actions()
