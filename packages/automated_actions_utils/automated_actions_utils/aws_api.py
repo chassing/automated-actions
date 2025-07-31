@@ -203,14 +203,16 @@ class AWSApi:
 
     def list_rds_logs(self, identifier: str) -> list[str]:
         """Lists the log files for a specified RDS instance."""
-        response = self.rds_client.describe_db_log_files(
-            DBInstanceIdentifier=identifier
-        )
-        return [
-            log["LogFileName"]
-            for log in response["DescribeDBLogFiles"]
-            if log["LogFileName"]
-        ]
+        logs: list[str] = []
+        log.info(f"Listing RDS logs for instance {identifier}")
+        paginator = self.rds_client.get_paginator("describe_db_log_files")
+        for page in paginator.paginate(DBInstanceIdentifier=identifier):
+            logs.extend(
+                log_file["LogFileName"]
+                for log_file in page.get("DescribeDBLogFiles", [])
+                if log_file["LogFileName"]
+            )
+        return logs
 
     def stream_rds_log(
         self, identifier: str, log_file: str

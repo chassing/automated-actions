@@ -409,15 +409,78 @@ def test_aws_api_create_rds_snapshot(
 
 
 @pytest.mark.parametrize(
-    ("region", "identifier", "expected_log_files"),
+    ("region", "identifier", "paginator_return_value", "expected_log_files"),
     [
         (
             "us-west-2",
             "test-db-instance",
+            [
+                {
+                    "DescribeDBLogFiles": [
+                        {"LogFileName": "error/mysql-error.log"},
+                        {"LogFileName": "slowquery/mysql-slowquery.log"},
+                    ]
+                }
+            ],
             ["error/mysql-error.log", "slowquery/mysql-slowquery.log"],
         ),
-        ("us-east-1", "postgres-instance", ["postgresql.log"]),
-        ("eu-west-1", "empty-instance", []),
+        (
+            "us-east-1",
+            "postgres-instance",
+            [{"DescribeDBLogFiles": [{"LogFileName": "postgresql.log"}]}],
+            ["postgresql.log"],
+        ),
+        (
+            "eu-west-1",
+            "empty-instance",
+            [{"DescribeDBLogFiles": []}],
+            [],
+        ),
+        (
+            "ap-south-1",
+            "multi-page-db",
+            [
+                {"DescribeDBLogFiles": [{"LogFileName": "error.log"}]},
+                {
+                    "DescribeDBLogFiles": [
+                        {"LogFileName": "slow.log"},
+                        {"LogFileName": "general.log"},
+                    ]
+                },
+            ],
+            ["error.log", "slow.log", "general.log"],
+        ),
+        (
+            "eu-north-1",
+            "missing-key-db",
+            [
+                {"DescribeDBLogFiles": [{"LogFileName": "valid.log"}]},
+                {"NotDescribeDBLogFiles": []},  # Page missing 'DescribeDBLogFiles' key
+            ],
+            ["valid.log"],
+        ),
+        (
+            "ca-central-1",
+            "empty-filename-db",
+            [
+                {
+                    "DescribeDBLogFiles": [
+                        {"LogFileName": "valid.log"},
+                        {"LogFileName": ""},  # Empty filename should be filtered out
+                        {"LogFileName": "another.log"},
+                    ]
+                }
+            ],
+            ["valid.log", "another.log"],
+        ),
+    ],
+    ids=[
+        "success_single_page",
+        "postgres_instance",
+        "empty_instance",
+        "multiple_pages",
+        "missing_key_in_page",
+        "empty_filename_filtered",
     ],
 )
 def test_aws_api_list_rds_logs(
@@ -425,26 +488,25 @@ def test_aws_api_list_rds_logs(
     mocker: MockerFixture,
     region: str,
     identifier: str,
+    paginator_return_value: list[dict[str, list[dict[str, str]]]],
     expected_log_files: list[str],
 ) -> None:
-    """Tests the list_rds_logs method of AWSApi."""
+    """Tests the list_rds_logs method of AWSApi with paginated responses."""
     aws_api = AWSApi(credentials=mock_aws_credentials, region=region)
 
     mock_rds_client_on_instance = mocker.MagicMock()
     aws_api.rds_client = mock_rds_client_on_instance
 
-    # Mock the describe_db_log_files response
-    mock_rds_client_on_instance.describe_db_log_files.return_value = {
-        "DescribeDBLogFiles": [
-            {"LogFileName": log_file} for log_file in expected_log_files
-        ]
-    }
+    mock_paginator = mocker.MagicMock()
+    mock_rds_client_on_instance.get_paginator.return_value = mock_paginator
+    mock_paginator.paginate.return_value = paginator_return_value
 
     result = aws_api.list_rds_logs(identifier=identifier)
 
-    mock_rds_client_on_instance.describe_db_log_files.assert_called_once_with(
-        DBInstanceIdentifier=identifier
+    mock_rds_client_on_instance.get_paginator.assert_called_once_with(
+        "describe_db_log_files"
     )
+    mock_paginator.paginate.assert_called_once_with(DBInstanceIdentifier=identifier)
     assert result == expected_log_files
 
 
