@@ -1,23 +1,28 @@
 # ruff: noqa: S106
 
 
-from collections.abc import Callable
 from datetime import UTC
 from datetime import datetime as dt
 from datetime import timedelta as td
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 import jwt
 import pytest
 from fastapi import FastAPI, HTTPException, status
 from fastapi.routing import APIRoute
-from fastapi.testclient import TestClient
 from httpx import HTTPStatusError
-from pytest_httpx import HTTPXMock
-from pytest_mock import MockerFixture
 
 from automated_actions.auth import OpenIDConnect
-from tests.conftest import MockUserModel
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from fastapi.testclient import TestClient
+    from pytest_httpx import HTTPXMock
+    from pytest_mock import MockerFixture
+
+    from tests.conftest import MockUserModel
 
 
 @pytest.fixture

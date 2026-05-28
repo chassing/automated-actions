@@ -1,10 +1,9 @@
 import logging
 import re
-from collections.abc import Iterable
 from datetime import UTC
 from datetime import datetime as dt
 from json import JSONDecodeError
-from typing import Any, Protocol, Self
+from typing import TYPE_CHECKING, Any, Protocol, Self
 from urllib.parse import quote
 
 import httpxyz as httpx
@@ -13,6 +12,9 @@ from fastapi import APIRouter, HTTPException, Request, Response, status
 from itsdangerous import URLSafeTimedSerializer
 from pydantic import BaseModel
 from starlette.responses import RedirectResponse
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 log = logging.getLogger(__name__)
 
@@ -101,7 +103,7 @@ class OpenIDConnect[UserModel: UserModelProtocol]:
         scope: str = "openid email profile",
         enforce_https: bool = True,
         user_model: type[UserModel],
-    ) -> "OpenIDConnect[UserModel]":
+    ) -> OpenIDConnect[UserModel]:
         async with httpx.AsyncClient() as client:
             res = await client.get(
                 issuer.rstrip("/") + "/.well-known/openid-configuration", timeout=5

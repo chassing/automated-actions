@@ -1,13 +1,17 @@
-from collections.abc import Callable
-from unittest.mock import MagicMock
+from typing import TYPE_CHECKING, get_type_hints
 
 import pytest
 from fastapi import FastAPI, status
-from fastapi.testclient import TestClient
-from pytest_mock import MockerFixture
 
 from automated_actions.api.v1.views.no_op import get_action
 from automated_actions.db.models import Action
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from unittest.mock import MagicMock
+
+    from fastapi.testclient import TestClient
+    from pytest_mock import MockerFixture
 
 
 @pytest.fixture
@@ -40,3 +44,8 @@ def test_no_op(
         },
         task_id=running_action["action_id"],
     )
+
+
+def test_dependency_type_aliases_resolve_at_runtime() -> None:
+    """UserDep must not be in a TYPE_CHECKING block."""
+    get_type_hints(get_action, include_extras=True)

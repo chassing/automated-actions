@@ -1,9 +1,9 @@
 import logging
 import logging.config
 import socket
-from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from importlib.metadata import version
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter as FastAPIAPIRouter
 from fastapi import FastAPI, Request, status
@@ -19,6 +19,9 @@ from automated_actions.api import (
 )
 from automated_actions.config import settings
 
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+
 log = logging.getLogger(__name__)
 
 
@@ -29,7 +32,7 @@ async def app_lifespan_manager(
     run_db_init: bool = True,
     run_auth_init: bool = True,
     run_router_config: bool = True,
-) -> AsyncGenerator[None, None]:
+) -> AsyncGenerator[None]:
     log.info("Lifespan: Application startup sequence initiated.")
 
     if run_db_init:
@@ -68,7 +71,7 @@ def create_app(
     run_router_config: bool = True,
 ) -> FastAPI:
     @asynccontextmanager
-    async def lifespan(app_instance: FastAPI) -> AsyncGenerator[None, None]:
+    async def lifespan(app_instance: FastAPI) -> AsyncGenerator[None]:
         async with app_lifespan_manager(
             app_instance,
             run_db_init=run_db_init,

@@ -3,7 +3,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Path, Query
 
-from automated_actions.api.v1.dependencies import UserDep
+from automated_actions.api.v1.dependencies import UserDep  # noqa: TC001
 from automated_actions.celery.openshift.tasks import (
     openshift_trigger_cronjob as openshift_trigger_cronjob_task,
 )
